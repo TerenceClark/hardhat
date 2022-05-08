@@ -19,7 +19,7 @@ export async function verifyContract(
   url: string,
   req: EtherscanVerifyRequest
 ): Promise<EtherscanResponse> {
-  const { request } = await import("undici");
+  const { request, setGlobalDispatcher, ProxyAgent } = await import("undici");
   const parameters = new URLSearchParams({ ...req });
   const method: Dispatcher.HttpMethod = "POST";
   const requestDetails = {
@@ -27,6 +27,14 @@ export async function verifyContract(
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: parameters.toString(),
   };
+  
+  let proxyUrl = process.env.http_proxy
+  if (proxyUrl == undefined || proxyUrl == "") {
+    proxyUrl = process.env.https_proxy
+  }
+  if (proxyUrl != undefined && proxyUrl != "") {
+    setGlobalDispatcher(new ProxyAgent(proxyUrl))
+  }
 
   let response: Dispatcher.ResponseData;
   try {
